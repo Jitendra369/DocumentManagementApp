@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    # e.g. jdbc:postgresql://dms-db.abc123.ap-south-1.rds.amazonaws.com:5432/dms?sslmode=require
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+
+app:
+  s3:
+    bucket: ${S3_BUCKET}
+    endpoint:                       # empty = real AWS
+    path-style: false
+    create-bucket-if-missing: false # create the bucket with Terraform or the console, not from the app

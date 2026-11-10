@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}          # from .env
+
+app:
+  s3:
+    bucket: dms-documents-local
+    endpoint: http://localhost:4566
+    path-style: true
+    create-bucket-if-missing: true

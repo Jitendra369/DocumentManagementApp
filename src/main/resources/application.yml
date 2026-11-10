@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: document-management-system
+
+  profiles:
+    default: local          # used when no profile is given
+
+  # .env is loaded by com.doc_manag.config.DotEnvLoader (works from any working directory)
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+app:
+  s3:
+    region: ${AWS_REGION:ap-south-1}
+    presign-minutes: 10
+  upload:
+    max-size: 25MB
+    allowed-types:
+      - application/pdf
+      - image/png
+      - image/jpeg
+      - text/plain
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet

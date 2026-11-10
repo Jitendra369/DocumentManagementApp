@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/dms     # "postgres" = compose service name
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+app:
+  s3:
+    bucket: dms-documents-docker
+    endpoint: http://localstack:4566             # "localstack" = compose service name
+    path-style: true
+    create-bucket-if-missing: true
