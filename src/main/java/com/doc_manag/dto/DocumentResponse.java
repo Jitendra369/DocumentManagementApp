@@ -12,6 +12,7 @@ public record DocumentResponse(
         String contentType,
         long sizeBytes,
         String status,
+        String category,
         Instant createdAt
 ) {
     public static DocumentResponse from(Document d) {
@@ -21,6 +22,7 @@ public record DocumentResponse(
                 d.getContentType(),
                 d.getSizeBytes(),
                 d.getStatus().name(),
+                d.getCategory().name(),
                 d.getCreatedAt());
     }
 }

@@ -1,0 +1,67 @@
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>
+      @if (summary(); as s) { {{ s.total }} documents across {{ sections.length }} sections }
+      @else { Overview of your documents }
+    </p>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="banner error" role="alert">{{ error() }}</div>
+}
+
+<section class="tiles">
+  @for (s of sections; track s.path) {
+    <a class="tile card" [routerLink]="'/' + s.path">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="s.icon" /></svg>
+      </span>
+      <span class="count">{{ loading() ? '–' : count(s.category) }}</span>
+      <span class="title">{{ s.title }}</span>
+      <span class="desc">{{ s.description }}</span>
+    </a>
+  }
+</section>
+
+<section class="card recent">
+  <div class="recent-head">
+    <h2>Recent uploads</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Section</th>
+          <th>Type</th>
+          <th class="num">Size</th>
+          <th>Uploaded</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of recent(); track doc.id) {
+          <tr>
+            <td class="name" [title]="doc.filename">{{ doc.filename }}</td>
+            <td>
+              @if (sectionFor(doc.category); as sec) {
+                <a class="link" [routerLink]="'/' + sec.path">{{ sec.title }}</a>
+              }
+            </td>
+            <td><span class="tag">{{ typeLabel(doc.contentType) }}</span></td>
+            <td class="num">{{ formatSize(doc.sizeBytes) }}</td>
+            <td>{{ doc.createdAt | date: 'medium' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty">
+              @if (loading()) { Loading… }
+              @else { Nothing uploaded yet. Open a section on the left to add your first file. }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

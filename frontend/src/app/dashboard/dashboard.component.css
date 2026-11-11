@@ -1,0 +1,42 @@
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tile:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+.icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.count { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.title { font-weight: 600; }
+.desc { color: var(--muted); font-size: 13px; }
+
+.recent-head { padding: 14px 14px 4px; }

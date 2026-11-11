@@ -1,9 +1,11 @@
 package com.doc_manag.service;
 
 import com.doc_manag.dto.DocumentResponse;
+import com.doc_manag.dto.DocumentSummaryResponse;
 import com.doc_manag.dto.PageResponse;
 import com.doc_manag.dto.PresignedUrlResponse;
 import com.doc_manag.entity.Document;
+import com.doc_manag.entity.DocumentCategory;
 import com.doc_manag.entity.DocumentStatus;
 import com.doc_manag.exception.DocumentNotFoundException;
 import com.doc_manag.exception.InvalidFileException;
@@ -22,6 +24,8 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -38,12 +42,12 @@ public class DocumentService {
 
     // ---------------- UPLOAD ----------------
     @Transactional
-    public DocumentResponse upload(MultipartFile file, String ownerId) {
+    public DocumentResponse upload(MultipartFile file, String ownerId, DocumentCategory category) {
         String contentType = validator.validateAndDetectType(file);
         String originalName = cleanFilename(file.getOriginalFilename());
         String s3Key = generateS3Key(originalName);
 
-        // 1) bytes to S3git
+        // 1) bytes to S3
         String eTag;
         try (InputStream in = file.getInputStream()) {
             eTag = storage.upload(s3Key, in, file.getSize(), contentType);
@@ -61,6 +65,7 @@ public class DocumentService {
                     .checksum(eTag)
                     .ownerId(ownerId)
                     .status(DocumentStatus.ACTIVE)
+                    .category(category)
                     .build();
             // saveAndFlush so DB errors happen here (inside the try), not later at commit
             return DocumentResponse.from(repository.saveAndFlush(doc));
@@ -73,16 +78,32 @@ public class DocumentService {
 
     // ---------------- LIST / SEARCH (database only) ----------------
     @Transactional(readOnly = true)
-    public PageResponse<DocumentResponse> list(String ownerId, Pageable pageable) {
-        Page<Document> page = repository.findByOwnerIdAndStatus(ownerId, DocumentStatus.ACTIVE, pageable);
+    /** @param category null = all sections */
+    public PageResponse<DocumentResponse> list(String ownerId, DocumentCategory category, Pageable pageable) {
+        Page<Document> page = category == null ? repository.findByOwnerIdAndStatus(ownerId, DocumentStatus.ACTIVE, pageable) : repository.findByOwnerIdAndStatusAndCategory(ownerId, DocumentStatus.ACTIVE, category, pageable);
         return PageResponse.from(page, DocumentResponse::from);
     }
 
+    /** @param category null = all sections */
     @Transactional(readOnly = true)
-    public PageResponse<DocumentResponse> search(String ownerId, String name, Pageable pageable) {
-        Page<Document> page = repository.findByOwnerIdAndStatusAndOriginalFilenameContainingIgnoreCase(
-                ownerId, DocumentStatus.ACTIVE, name, pageable);
+    public PageResponse<DocumentResponse> search(String ownerId, String name, DocumentCategory category, Pageable pageable) {
+        Page<Document> page = category == null
+                ? repository.findByOwnerIdAndStatusAndOriginalFilenameContainingIgnoreCase(ownerId, DocumentStatus.ACTIVE, name, pageable)
+                : repository.findByOwnerIdAndStatusAndCategoryAndOriginalFilenameContainingIgnoreCase(ownerId, DocumentStatus.ACTIVE, category, name, pageable);
         return PageResponse.from(page, DocumentResponse::from);
+    }
+
+    /** Dashboard: active document count per section (every section present, 0 if empty). */
+    @Transactional(readOnly = true)
+    public DocumentSummaryResponse summary(String ownerId) {
+        Map<DocumentCategory, Long> counts = new EnumMap<>(DocumentCategory.class);
+        for (DocumentCategory c : DocumentCategory.values()) {
+            counts.put(c, 0L);
+        }
+        repository.countByCategory(ownerId, DocumentStatus.ACTIVE)
+                .forEach(row -> counts.put(row.getCategory(), row.getCount()));
+        long total = counts.values().stream().mapToLong(Long::longValue).sum();
+        return new DocumentSummaryResponse(total, counts);
     }
 
     // ---------------- METADATA ----------------
@@ -138,8 +159,7 @@ public class DocumentService {
     /** documents/2026/11/3f2b...-uuid.pdf  (never the user's filename) */
     private String generateS3Key(String originalName) {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-        return "documents/%d/%02d/%s%s".formatted(
-                now.getYear(), now.getMonthValue(), UUID.randomUUID(), extensionOf(originalName));
+        return "documents/%d/%02d/%s%s".formatted(now.getYear(), now.getMonthValue(), UUID.randomUUID(), extensionOf(originalName));
     }
 
     private static String extensionOf(String filename) {

@@ -1,20 +1,4 @@
 services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: dms
-      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME missing in .env}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD missing in .env}
-    ports:
-      - "5433:5432"      # 5433 on your PC so it never clashes with Windows PostgreSQL
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d dms"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   localstack:
     image: localstack/localstack:3.8
     environment:
@@ -33,18 +17,22 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker        # picks application-docker.yml
+      SPRING_PROFILES_ACTIVE: docker
+      # Database: your Windows PostgreSQL (host.docker.internal = your PC, seen from inside Docker)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/postgres
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      # S3: LocalStack container
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_REGION: ap-south-1
+      APP_S3_BUCKET: dms-documents-local
+      APP_S3_ENDPOINT: http://localstack:4566
+      APP_S3_PATHSTYLE: "true"
+      APP_S3_CREATEBUCKETIFMISSING: "true"
     depends_on:
-      postgres:
-        condition: service_healthy
       localstack:
         condition: service_healthy
     restart: unless-stopped
-
-volumes:
-  pgdata:

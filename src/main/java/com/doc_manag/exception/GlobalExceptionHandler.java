@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -33,6 +36,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorResponse> missingHeader(MissingRequestHeaderException e) {
         return build(HttpStatus.BAD_REQUEST, "Missing header: " + e.getHeaderName());
+    }
+
+    /** e.g. ?category=FOO or an id that isn't a UUID */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> badParam(MethodArgumentTypeMismatchException e) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid value for '" + e.getName() + "': " + e.getValue());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> missingParam(MissingServletRequestParameterException e) {
+        return build(HttpStatus.BAD_REQUEST, "Missing parameter: " + e.getParameterName());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> missingPart(MissingServletRequestPartException e) {
+        return build(HttpStatus.BAD_REQUEST, "Missing form field: " + e.getRequestPartName());
     }
 
     /** S3 problems: 403 = IAM/bucket policy, 404 = missing bucket, etc. Don't leak details to clients. */

@@ -1,0 +1,14 @@
+.upload input { position: absolute; inset: 0; opacity: 0; cursor: inherit; }
+.upload.busy { opacity: 0.8; cursor: progress; }
+
+.search { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.search input { width: 280px; max-width: 100%; }
+
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  color: var(--muted);
+}

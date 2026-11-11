@@ -1,8 +1,10 @@
 package com.doc_manag.controller;
 
 import com.doc_manag.dto.DocumentResponse;
+import com.doc_manag.dto.DocumentSummaryResponse;
 import com.doc_manag.dto.PageResponse;
 import com.doc_manag.dto.PresignedUrlResponse;
+import com.doc_manag.entity.DocumentCategory;
 import com.doc_manag.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -31,28 +33,37 @@ public class DocumentController {
 
     private final DocumentService service;
 
-    /** POST /api/documents   (form-data: file=@report.pdf) */
+    /** POST /api/documents   (form-data: file=@report.pdf, category=INVOICE) */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentResponse> upload(@RequestHeader(USER_HEADER) String userId,
-                                                   @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.upload(file, userId));
+                                                   @RequestParam("file") MultipartFile file,
+                                                   @RequestParam(defaultValue = "DOCUMENT") DocumentCategory category) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.upload(file, userId, category));
     }
 
-    /** GET /api/documents?page=0&size=20 */
+    /** GET /api/documents?page=0&size=20&category=INVOICE   (category optional = all) */
     @GetMapping
     public PageResponse<DocumentResponse> list(@RequestHeader(USER_HEADER) String userId,
+                                               @RequestParam(required = false) DocumentCategory category,
                                                @RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "20") int size) {
-        return service.list(userId, pageable(page, size));
+        return service.list(userId, category, pageable(page, size));
     }
 
-    /** GET /api/documents/search?name=invoice */
+    /** GET /api/documents/search?name=invoice&category=INVOICE   (category optional = all) */
     @GetMapping("/search")
     public PageResponse<DocumentResponse> search(@RequestHeader(USER_HEADER) String userId,
                                                  @RequestParam String name,
+                                                 @RequestParam(required = false) DocumentCategory category,
                                                  @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
-        return service.search(userId, name, pageable(page, size));
+        return service.search(userId, name, category, pageable(page, size));
+    }
+
+    /** GET /api/documents/summary   -> counts per section for the dashboard */
+    @GetMapping("/summary")
+    public DocumentSummaryResponse summary(@RequestHeader(USER_HEADER) String userId) {
+        return service.summary(userId);
     }
 
     /** GET /api/documents/{id}   (metadata only) */

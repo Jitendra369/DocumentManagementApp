@@ -48,6 +48,10 @@ public class Document {
     @Column(name = "status", nullable = false, length = 20)
     private DocumentStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false, length = 30)
+    private DocumentCategory category;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

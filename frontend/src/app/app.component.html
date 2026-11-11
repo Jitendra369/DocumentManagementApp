@@ -1,0 +1,41 @@
+<div class="shell">
+  <aside class="sidebar" [class.open]="menuOpen">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Zm0 0v5h5" /></svg>
+      DocVault
+    </div>
+
+    <nav (click)="menuOpen = false">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" /></svg>
+        Dashboard
+      </a>
+      <p class="nav-label">Sections</p>
+      @for (s of sections; track s.path) {
+        <a [routerLink]="'/' + s.path" routerLinkActive="active">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="s.icon" /></svg>
+          {{ s.title }}
+        </a>
+      }
+    </nav>
+
+    <form class="user" (ngSubmit)="switchUser()">
+      <label for="user">Signed in as</label>
+      <div class="row">
+        <input id="user" name="user" [(ngModel)]="userInput" autocomplete="off" />
+        <button type="submit" class="secondary">Switch</button>
+      </div>
+    </form>
+  </aside>
+
+  <div class="main">
+    <header class="mobile-bar">
+      <button class="secondary" (click)="menuOpen = !menuOpen" aria-label="Toggle menu">☰</button>
+      <span class="brand-text">DocVault</span>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

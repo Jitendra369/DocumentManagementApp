@@ -1,0 +1,7 @@
+target/
+frontend/
+.env
+.env.example
+.git/
+.idea/
+*.md

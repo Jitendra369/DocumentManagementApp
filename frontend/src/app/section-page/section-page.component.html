@@ -1,0 +1,84 @@
+<div class="page-header">
+  <div>
+    <h1>{{ section().title }}</h1>
+    <p>{{ section().description }}</p>
+  </div>
+
+  <label class="primary upload" [class.busy]="uploadProgress() !== null">
+    <input type="file" (change)="onFileSelected($event)"
+           accept=".pdf,.png,.jpg,.jpeg,.txt,.docx,.xlsx"
+           [disabled]="uploadProgress() !== null" />
+    @if (uploadProgress() !== null) {
+      Uploading… {{ uploadProgress() }}%
+    } @else {
+      Upload to {{ section().title }}
+    }
+  </label>
+</div>
+
+<form class="search" (ngSubmit)="runSearch()">
+  <input name="search" [(ngModel)]="search" [placeholder]="'Search ' + section().title.toLowerCase()" />
+  <button type="submit" class="secondary">Search</button>
+  @if (search) {
+    <button type="button" class="link" (click)="clearSearch()">Clear</button>
+  }
+</form>
+
+@if (error()) {
+  <div class="banner error" role="alert">
+    {{ error() }}
+    <button class="link" (click)="error.set(null)">Dismiss</button>
+  </div>
+}
+
+@if (lastDeleted(); as d) {
+  <div class="banner info">
+    Deleted "{{ d.filename }}".
+    <button class="link" (click)="undoDelete()">Undo</button>
+  </div>
+}
+
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th class="num">Size</th>
+        <th>Uploaded</th>
+        <th class="actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (doc of docs(); track doc.id) {
+        <tr>
+          <td class="name" [title]="doc.filename">{{ doc.filename }}</td>
+          <td><span class="tag">{{ typeLabel(doc.contentType) }}</span></td>
+          <td class="num">{{ formatSize(doc.sizeBytes) }}</td>
+          <td>{{ doc.createdAt | date: 'medium' }}</td>
+          <td class="actions">
+            <button class="link" (click)="view(doc)">View</button>
+            <button class="link" (click)="download(doc)">Download</button>
+            <button class="link danger" (click)="remove(doc)">Delete</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="empty">
+            @if (loading()) { Loading… }
+            @else if (search) { No files match "{{ search }}". }
+            @else { No files in {{ section().title }} yet. Upload a PDF, image, text, Word or Excel file (max 25 MB). }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (totalPages() > 1) {
+  <nav class="pager">
+    <button class="secondary" [disabled]="page() === 0" (click)="load(page() - 1)">Previous</button>
+    <span>Page {{ page() + 1 }} of {{ totalPages() }} · {{ total() }} files</span>
+    <button class="secondary" [disabled]="page() + 1 >= totalPages()" (click)="load(page() + 1)">Next</button>
+  </nav>
+}
